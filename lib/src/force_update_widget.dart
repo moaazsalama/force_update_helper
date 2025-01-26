@@ -95,6 +95,9 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
 
   @override
   Widget build(BuildContext context) {
+    if (_isAlertVisible) {
+      return const Scaffold();
+    }
     return widget.child;
   }
 }
