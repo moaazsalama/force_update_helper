@@ -27,9 +27,11 @@ class ForceUpdateWidget extends StatefulWidget {
   State<ForceUpdateWidget> createState() => _ForceUpdateWidgetState();
 }
 
+enum CheckPrograss { checking, needUpdate, notNeedUpdate }
+
 class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
     with WidgetsBindingObserver {
-  var _isAlertVisible = false;
+  CheckPrograss? prograss;
 
   @override
   void initState() {
@@ -39,23 +41,19 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkIfAppUpdateIsNeeded();
-    }
-  }
-
-  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   Future<void> _checkIfAppUpdateIsNeeded() async {
-    if (_isAlertVisible) {
+    if (prograss == CheckPrograss.notNeedUpdate ||
+        prograss == CheckPrograss.notNeedUpdate) {
       return;
     }
     try {
+      prograss == CheckPrograss.checking;
+      setState(() {});
       final storeUrl = await widget.forceUpdateClient.storeUrl();
       if (storeUrl == null) {
         return;
@@ -63,8 +61,12 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
       final updateRequired =
           await widget.forceUpdateClient.isAppUpdateRequired();
       if (updateRequired) {
-        return await _triggerForceUpdate(Uri.parse(storeUrl));
+        prograss = CheckPrograss.needUpdate;
+        await _triggerForceUpdate(Uri.parse(storeUrl));
+      } else {
+        prograss = CheckPrograss.notNeedUpdate;
       }
+      setState(() {});
     } catch (e, st) {
       final handler = widget.onException;
       if (handler != null) {
@@ -78,10 +80,10 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
   Future<void> _triggerForceUpdate(Uri storeUrl) async {
     final ctx = widget.navigatorKey.currentContext ?? context;
     // * setState not needed, just keeping track of alert visibility
-    _isAlertVisible = true;
+
     final success = await widget.showForceUpdateAlert(ctx, widget.allowCancel);
     // * setState not needed, just keeping track of alert visibility
-    _isAlertVisible = false;
+
     if (success == true) {
       // * open app store page
       await widget.showStoreListing(storeUrl);
@@ -95,10 +97,14 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
 
   @override
   Widget build(BuildContext context) {
-    if (_isAlertVisible) {
-      return const Scaffold();
+    if (prograss == CheckPrograss.notNeedUpdate) {
+      return widget.child;
     }
-    return widget.child;
+    if (prograss == CheckPrograss.needUpdate) {
+      return const Scaffold();
+    } else {
+      return const Material();
+    }
   }
 }
 
