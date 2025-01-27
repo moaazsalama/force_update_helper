@@ -23,6 +23,9 @@ class MainApp extends StatelessWidget {
       builder: (context, child) {
         return ForceUpdateWidget(
           navigatorKey: _rootNavigatorKey,
+          onChecked: (result)async {
+            
+          },
           forceUpdateClient: ForceUpdateClient(
             fetchRequiredVersion: () async {
               // * Fetch remote config from an API endpoint.

@@ -11,6 +11,7 @@ class ForceUpdateWidget extends StatefulWidget {
     required this.forceUpdateClient,
     required this.allowCancel,
     required this.showForceUpdateAlert,
+    required this.onChecked,
     required this.showStoreListing,
     this.onException,
   });
@@ -21,6 +22,7 @@ class ForceUpdateWidget extends StatefulWidget {
   final Future<bool?> Function(BuildContext context, bool allowCancel)
       showForceUpdateAlert;
   final Future<void> Function(Uri storeUrl) showStoreListing;
+  final Future<void> Function(CheckPrograss result) onChecked;
   final void Function(Object error, StackTrace? stackTrace)? onException;
 
   @override
@@ -41,6 +43,12 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    _checkIfAppUpdateIsNeeded();
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -48,12 +56,12 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
 
   Future<void> _checkIfAppUpdateIsNeeded() async {
     if (prograss == CheckPrograss.notNeedUpdate ||
-        prograss == CheckPrograss.notNeedUpdate) {
+        prograss == CheckPrograss.needUpdate) {
       return;
     }
     try {
       prograss == CheckPrograss.checking;
-      setState(() {});
+      // setState(() {});
       final storeUrl = await widget.forceUpdateClient.storeUrl();
       if (storeUrl == null) {
         return;
@@ -66,7 +74,8 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
       } else {
         prograss = CheckPrograss.notNeedUpdate;
       }
-      setState(() {});
+      widget.onChecked(prograss!);
+      // setState(() {});
     } catch (e, st) {
       final handler = widget.onException;
       if (handler != null) {
@@ -97,14 +106,14 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
 
   @override
   Widget build(BuildContext context) {
-    if (prograss == CheckPrograss.notNeedUpdate) {
-      return widget.child;
-    }
-    if (prograss == CheckPrograss.needUpdate) {
-      return const Scaffold();
-    } else {
-      return const Material();
-    }
+    // if (prograss == CheckPrograss.notNeedUpdate) {
+    return widget.child;
+    // }
+    // if (prograss == CheckPrograss.needUpdate) {
+    //   return const Scaffold();
+    // } else {
+    //   return const Material();
+    // }
   }
 }
 
